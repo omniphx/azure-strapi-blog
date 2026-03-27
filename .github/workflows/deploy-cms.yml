@@ -1,0 +1,47 @@
+name: Deploy CMS (Strapi)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/cms/src/**"
+      - "apps/cms/config/**"
+      - "apps/cms/package.json"
+      - ".github/workflows/deploy-cms.yml"
+  workflow_dispatch:
+
+permissions:
+  id-token: write   # required for OIDC
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Build deployment zip
+        run: |
+          cd apps/cms
+          zip -r ${{ runner.temp }}/cms-deploy.zip . \
+            --exclude "*.git*" \
+            --exclude "node_modules/*" \
+            --exclude ".tmp/*" \
+            --exclude ".cache/*" \
+            --exclude "dist/*" \
+            --exclude "build/*" \
+            --exclude ".env"
+
+      - name: Deploy to Azure App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: StrapiBlog
+          package: ${{ runner.temp }}/cms-deploy.zip
