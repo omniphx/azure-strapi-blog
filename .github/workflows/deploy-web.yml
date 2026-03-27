@@ -48,13 +48,12 @@ jobs:
         run: |
           DEPLOY=${{ runner.temp }}/deploy
           # Copy standalone output, dereferencing symlinks (pnpm uses symlinks
-          # that won't survive zip → Azure extraction)
-          cp -rL apps/web/.next/standalone/. "$DEPLOY/"
+          # that won't survive zip → Azure extraction).
+          # rsync --copy-links resolves symlinks and --safe-links skips dangling ones.
+          rsync -a --copy-links --safe-links apps/web/.next/standalone/ "$DEPLOY/"
           # Copy static assets and public into the app directory
-          mkdir -p "$DEPLOY/apps/web/.next/static"
-          cp -rL apps/web/.next/static/. "$DEPLOY/apps/web/.next/static/"
-          mkdir -p "$DEPLOY/apps/web/public"
-          cp -rL apps/web/public/. "$DEPLOY/apps/web/public/"
+          rsync -a --copy-links --safe-links apps/web/.next/static/ "$DEPLOY/apps/web/.next/static/"
+          rsync -a --copy-links --safe-links apps/web/public/ "$DEPLOY/apps/web/public/"
           cd "$DEPLOY"
           zip -r ${{ runner.temp }}/web-deploy.zip .
 
