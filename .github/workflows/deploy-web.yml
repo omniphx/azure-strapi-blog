@@ -44,16 +44,29 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Build deployment zip
+      - name: Disable Oryx remote build
         run: |
-          cd apps/web
-          zip -r ${{ runner.temp }}/web-deploy.zip . \
-            --exclude "*.git*" \
-            --exclude ".env*" \
-            --exclude "node_modules/*"
+          az webapp config appsettings set \
+            --name mm-blog-web \
+            --resource-group $(az webapp show --name mm-blog-web --query resourceGroup -o tsv) \
+            --settings SCM_DO_BUILD_DURING_DEPLOYMENT=false
+
+      - name: Prepare standalone deployment
+        run: |
+          DEPLOY=${{ runner.temp }}/deploy
+          # Copy entire standalone output (preserves monorepo node_modules layout)
+          cp -r apps/web/.next/standalone/. "$DEPLOY/"
+          # Copy static assets and public into the app directory
+          mkdir -p "$DEPLOY/apps/web/.next/static"
+          cp -r apps/web/.next/static/. "$DEPLOY/apps/web/.next/static/"
+          mkdir -p "$DEPLOY/apps/web/public"
+          cp -r apps/web/public/. "$DEPLOY/apps/web/public/"
+          cd "$DEPLOY"
+          zip -r ${{ runner.temp }}/web-deploy.zip .
 
       - name: Deploy to Azure App Service
         uses: azure/webapps-deploy@v3
         with:
           app-name: mm-blog-web
           package: ${{ runner.temp }}/web-deploy.zip
+          startup-command: "node apps/web/server.js"
