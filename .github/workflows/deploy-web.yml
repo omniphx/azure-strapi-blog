@@ -37,6 +37,7 @@ jobs:
         env:
           NEXT_PUBLIC_STRAPI_URL: ${{ secrets.NEXT_PUBLIC_STRAPI_URL }}
           STRAPI_HOSTNAME: ${{ secrets.STRAPI_HOSTNAME }}
+          STRAPI_BLOB_HOSTNAME: ${{ secrets.STRAPI_BLOB_HOSTNAME }}
 
       - name: Azure login (OIDC)
         uses: azure/login@v2
