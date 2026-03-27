@@ -50,7 +50,8 @@ jobs:
           # Copy standalone output, dereferencing symlinks (pnpm uses symlinks
           # that won't survive zip → Azure extraction).
           # rsync --copy-links resolves symlinks and --safe-links skips dangling ones.
-          rsync -a --copy-links --safe-links apps/web/.next/standalone/ "$DEPLOY/"
+          # rsync exit code 23 = some files skipped (dangling symlinks) — acceptable
+          rsync -a --copy-links --safe-links apps/web/.next/standalone/ "$DEPLOY/" || [ $? -eq 23 ]
           # Copy static assets and public into the app directory
           rsync -a --copy-links --safe-links apps/web/.next/static/ "$DEPLOY/apps/web/.next/static/"
           rsync -a --copy-links --safe-links apps/web/public/ "$DEPLOY/apps/web/public/"
