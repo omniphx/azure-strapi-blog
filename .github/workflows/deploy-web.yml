@@ -12,30 +12,16 @@ permissions:
   id-token: write   # required for OIDC
   contents: read
 
+env:
+  REGISTRY: mmblogacr.azurecr.io
+  IMAGE_NAME: web
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: "pnpm"
-          cache-dependency-path: pnpm-lock.yaml
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build
-        run: pnpm --filter web build
-        env:
-          NEXT_PUBLIC_STRAPI_URL: ${{ secrets.NEXT_PUBLIC_STRAPI_URL }}
-          STRAPI_HOSTNAME: ${{ secrets.STRAPI_HOSTNAME }}
-          STRAPI_BLOB_HOSTNAME: ${{ secrets.STRAPI_BLOB_HOSTNAME }}
 
       - name: Azure login (OIDC)
         uses: azure/login@v2
@@ -44,23 +30,24 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Prepare standalone deployment
+      - name: Log in to ACR
+        run: az acr login --name mmblogacr
+
+      - name: Build and push Docker image
         run: |
-          DEPLOY=${{ runner.temp }}/deploy
-          # Copy standalone output, dereferencing symlinks (pnpm uses symlinks
-          # that won't survive zip → Azure extraction).
-          # rsync --copy-links resolves symlinks and --safe-links skips dangling ones.
-          # rsync exit code 23 = some files skipped (dangling symlinks) — acceptable
-          rsync -a --copy-links --safe-links apps/web/.next/standalone/ "$DEPLOY/" || [ $? -eq 23 ]
-          # Copy static assets and public into the app directory
-          rsync -a --copy-links --safe-links apps/web/.next/static/ "$DEPLOY/apps/web/.next/static/"
-          rsync -a --copy-links --safe-links apps/web/public/ "$DEPLOY/apps/web/public/"
-          cd "$DEPLOY"
-          zip -r ${{ runner.temp }}/web-deploy.zip .
+          docker build \
+            --build-arg NEXT_PUBLIC_STRAPI_URL=${{ secrets.NEXT_PUBLIC_STRAPI_URL }} \
+            --build-arg STRAPI_HOSTNAME=${{ secrets.STRAPI_HOSTNAME }} \
+            --build-arg STRAPI_BLOB_HOSTNAME=${{ secrets.STRAPI_BLOB_HOSTNAME }} \
+            -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
+            -f apps/web/Dockerfile \
+            .
+
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} --all-tags
 
       - name: Deploy to Azure App Service
         uses: azure/webapps-deploy@v3
         with:
           app-name: mm-blog-web
-          package: ${{ runner.temp }}/web-deploy.zip
-          startup-command: "node apps/web/server.js"
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
