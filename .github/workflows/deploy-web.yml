@@ -44,12 +44,14 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Disable Oryx remote build
+      - name: Configure Azure App settings
         run: |
           az webapp config appsettings set \
             --name mm-blog-web \
             --resource-group mm-blog \
-            --settings SCM_DO_BUILD_DURING_DEPLOYMENT=false
+            --settings \
+              SCM_DO_BUILD_DURING_DEPLOYMENT=0 \
+              WEBSITE_RUN_FROM_PACKAGE=1
 
       - name: Prepare standalone deployment
         run: |
