@@ -48,7 +48,7 @@ jobs:
         run: |
           az webapp config appsettings set \
             --name mm-blog-web \
-            --resource-group $(az webapp show --name mm-blog-web --query resourceGroup -o tsv) \
+            --resource-group mm-blog \
             --settings SCM_DO_BUILD_DURING_DEPLOYMENT=false
 
       - name: Prepare standalone deployment
