@@ -117,6 +117,7 @@ export async function getPosts(options: FetchOptions = {}): Promise<StrapiRespon
     return await strapiRequest<StrapiResponse<Post[]>>(
       "/posts",
       {
+        "status": "published",
         "populate[cover]": "true",
         "populate[category]": "true",
         "populate[author][populate][avatar]": "true",
@@ -134,6 +135,7 @@ export async function getPost(slug: string, options: FetchOptions = {}): Promise
     const res = await strapiRequest<StrapiResponse<Post[]>>(
       "/posts",
       {
+        "status": "published",
         "filters[slug][$eq]": slug,
         "populate[cover]": "true",
         "populate[category]": "true",
@@ -151,7 +153,7 @@ export async function getPostSlugs(): Promise<string[]> {
   try {
     const res = await strapiRequest<StrapiResponse<Pick<Post, "slug">[]>>(
       "/posts",
-      { "fields[0]": "slug", "pagination[pageSize]": 100 },
+      { "status": "published", "fields[0]": "slug", "pagination[pageSize]": 100 },
       { revalidate: 3600, tags: ["post-slugs"] }
     );
     return res.data.map((post) => post.slug);

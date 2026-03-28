@@ -12,12 +12,13 @@
     "strapi": "strapi"
   },
   "dependencies": {
-    "@strapi/strapi": "^5.0.0",
     "@strapi/plugin-users-permissions": "^5.0.0",
+    "@strapi/strapi": "^5.0.0",
     "better-sqlite3": "^9.6.0",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
-    "react-router-dom": "^6.22.1"
+    "react-router-dom": "^6.22.1",
+    "styled-components": "^6.3.12"
   },
   "devDependencies": {
     "@strapi/typescript-utils": "^5.0.0",

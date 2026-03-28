@@ -14,6 +14,8 @@ apps/cms/.tmp
 apps/cms/build
 apps/cms/exports
 apps/cms/.cache
+apps/cms/.strapi
+apps/cms/.strapi-updater.json
 apps/cms/public/uploads
 
 # Environment variables
