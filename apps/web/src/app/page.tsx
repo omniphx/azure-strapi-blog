@@ -16,7 +16,7 @@ export default async function HomePage() {
         <p className="text-foreground/60">No posts yet. Add some content in the Strapi admin.</p>
       ) : (
         <ul className="space-y-10">
-          {posts.map((post) => (
+          {posts.map((post, index) => (
             <li key={post.documentId}>
               <article className="group grid gap-4 sm:grid-cols-[1fr_2fr]">
                 {post.cover && (
@@ -27,6 +27,8 @@ export default async function HomePage() {
                       width={post.cover.formats?.medium?.width ?? post.cover.width}
                       height={post.cover.formats?.medium?.height ?? post.cover.height}
                       className="w-full h-48 object-cover transition-transform group-hover:scale-105"
+                      sizes="(max-width: 640px) 100vw, 33vw"
+                      priority={index < 2}
                     />
                   </Link>
                 )}

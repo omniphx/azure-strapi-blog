@@ -95,6 +95,7 @@ export default async function BlogPostPage({ params }: Props) {
               width={post.cover.formats?.large?.width ?? post.cover.width}
               height={post.cover.formats?.large?.height ?? post.cover.height}
               className="w-full object-cover"
+              sizes="(max-width: 768px) 100vw, 768px"
               priority
             />
           </div>
