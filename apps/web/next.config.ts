@@ -3,6 +3,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  compress: false,
   turbopack: {
     root: path.resolve(__dirname, "../.."),
   },
